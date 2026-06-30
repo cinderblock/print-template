@@ -1,8 +1,11 @@
 import type { MetaFunction } from "react-router";
+import { Link } from "react-router";
+import { templateList } from "~/templates/manifest";
 
 export const meta: MetaFunction = () => {
-  const title = "My Site";
-  const description = "A static site built with React Router and Vite.";
+  const title = "Print Template";
+  const description =
+    "Print onto envelopes, labels, and more — straight from your browser.";
   return [
     { title },
     { name: "description", content: description },
@@ -10,20 +13,37 @@ export const meta: MetaFunction = () => {
     { property: "og:title", content: title },
     { property: "og:description", content: description },
     { name: "twitter:card", content: "summary" },
-    { name: "twitter:title", content: title },
-    { name: "twitter:description", content: description },
   ];
 };
 
 export default function Home() {
+  const categories = [...new Set(templateList.map((t) => t.category))];
+
   return (
     <main className="container">
-      <section className="hero">
-        <h1>Hello, World</h1>
-        <p className="subtitle">
-          Edit <code>app/routes/home.tsx</code> to get started.
+      <header className="site-header">
+        <h1 className="site-header__title">Print Template</h1>
+        <p className="intro">
+          Print onto envelopes, labels, and more — straight from your browser.
+          Your addresses are saved only on this device.
         </p>
-      </section>
+      </header>
+
+      {categories.map((category) => (
+        <section key={category} className="gallery">
+          <h2 className="gallery__heading">{category}</h2>
+          <div className="gallery__grid">
+            {templateList
+              .filter((t) => t.category === category)
+              .map((t) => (
+                <Link key={t.id} to={`/template/${t.id}`} className="card">
+                  <h3 className="card__title">{t.name}</h3>
+                  <p className="card__desc">{t.description}</p>
+                </Link>
+              ))}
+          </div>
+        </section>
+      ))}
     </main>
   );
 }

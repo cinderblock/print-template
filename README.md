@@ -1,74 +1,54 @@
-# SSG Base
+# Print Template
 
-A boilerplate for static sites built with React Router 7, Vite, and TypeScript.
+Print onto physical media — **envelopes, labels, and more** — straight from your browser.
+Fill in a few fields, get a true-to-size print. Your addresses are saved only on your device
+(localStorage); nothing is uploaded.
 
-## Stack
+Built on [`cinderblock/ssg-base`](https://github.com/cinderblock/ssg-base) (React Router 7 SSG +
+Vite + TypeScript + Bun).
 
-- **React 19** + **React Router 7** — UI and routing
-- **Vite** — build tool and dev server
-- **TypeScript** — strict mode
-- **Bun** — package manager and runtime
-- **Playwright** — end-to-end testing
-- **oxfmt** + **lefthook** — code formatting and pre-commit hooks
-- **Cloudflare Pages** — deployment (via GitHub Actions)
+## Templates
 
-## Getting Started
+| Template     | Media                            | Status  |
+| ------------ | -------------------------------- | ------- |
+| #10 Envelope | 9.5 × 4.125 in business envelope | ✅      |
+| Avery labels | sheet label grids                | planned |
+
+## How it works
+
+- Each template declares a **paper size** (in inches), a set of **fields**, and a **Preview**
+  component that renders the printable layout.
+- `PrintArea` shows the preview true-to-size (scaled to fit on screen) and injects an
+  `@page { size: <w> <h>; margin: 0 }` rule so it prints at exact physical dimensions.
+- Envelopes remember your **return ("from") address** and keep an **address book** of recently
+  used **delivery ("to") addresses** — all in `localStorage`.
+
+## Add a template
+
+1. Create `app/templates/<id>/index.tsx` exporting a `TemplateRender` (`id`, `paper`, `fields`,
+   `Preview`). Co-locate any CSS (e.g. `<id>/styles.css`).
+2. Register it in `app/templates/registry.tsx`.
+3. Add its metadata to `app/templates/manifest.ts` (drives the gallery + prerendered routes).
+
+## Develop
 
 ```sh
 bun install
-bun run dev
+bun run dev        # http://localhost:5173
 ```
 
-## Scripts
+| Script              | Description                         |
+| ------------------- | ----------------------------------- |
+| `bun run dev`       | Dev server                          |
+| `bun run build`     | Build static site to `build/client` |
+| `bun run preview`   | Preview the production build        |
+| `bun run test`      | Playwright tests                    |
+| `bun run typecheck` | Type check                          |
+| `bun run fmt`       | Format with oxfmt                   |
 
-| Script              | Description                  |
-| ------------------- | ---------------------------- |
-| `bun run dev`       | Start dev server             |
-| `bun run build`     | Build static site            |
-| `bun run preview`   | Preview built site           |
-| `bun run test`      | Run Playwright tests         |
-| `bun run test:ui`   | Run tests with Playwright UI |
-| `bun run fmt`       | Format all files with oxfmt  |
-| `bun run fmt:check` | Check formatting             |
-| `bun run typecheck` | Type check                   |
+## Deploy
 
-## Project Structure
-
-```
-app/
-  root.tsx          — HTML shell and layout
-  routes.ts         — Route definitions
-  routes/
-    home.tsx        — Index page
-    404.tsx         — Not found page
-  styles/
-    global.css      — Global styles (light/dark mode)
-public/
-  favicon-light.svg — Favicon for light mode
-  favicon-dark.svg  — Favicon for dark mode
-tests/
-  home.spec.ts      — E2E tests
-```
-
-## Deployment
-
-The included GitHub Actions workflow deploys to Cloudflare Pages on push to `master` and runs CI on pull requests.
-
-Set up these secrets/variables in your repo:
-
-- **Secret**: `CLOUDFLARE_API_TOKEN`
-- **Variable**: `CLOUDFLARE_ACCOUNT_ID`
-
-Update the `--project-name` in `.github/workflows/deploy.yml` to match your Cloudflare Pages project.
-
-## Adding Routes
-
-1. Create a new file in `app/routes/`
-2. Add it to `app/routes.ts`
-
-All routes are automatically pre-rendered during build (configured via `prerender: true` in `react-router.config.ts`).
-
-## Development Tips
-
-- Append `?light` to any URL during development to force light mode (e.g., `http://localhost:5173/?light`).
-- Favicons automatically adapt to the user's light/dark mode preference. Replace the SVGs in `public/` with your own.
+Static output lands in `build/client/` — host on any static host. The included GitHub Action
+(`.github/workflows/deploy.yml`, inherited from ssg-base) targets **Cloudflare Pages**; switch to
+GitHub Pages by swapping the workflow and setting Vite's `base` if served from a subpath.
+See `plans/print-template.md`.

@@ -1,0 +1,35 @@
+/* #10 envelope layout. Positions are in inches so they print true-to-size;
+   the parent .print-paper provides the 9.5 x 4.125in canvas. */
+.envelope {
+  position: absolute;
+  inset: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #000;
+}
+
+.envelope__return {
+  position: absolute;
+  top: 0.3in;
+  left: 0.35in;
+  font-size: 11pt;
+  line-height: 1.35;
+  white-space: pre-line;
+}
+
+.envelope__endorsement {
+  position: absolute;
+  top: 1.55in;
+  left: 4in;
+  font-size: 10pt;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.envelope__delivery {
+  position: absolute;
+  top: 1.95in;
+  left: 4in;
+  font-size: 13pt;
+  line-height: 1.4;
+  white-space: pre-line;
+}

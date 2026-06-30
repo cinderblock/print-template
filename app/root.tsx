@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 import "@fontsource-variable/inter";
 import "./styles/global.css";
@@ -38,5 +39,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  // Mark the document as hydrated so interactions (and tests) can wait for
+  // React to take over the prerendered HTML.
+  useEffect(() => {
+    document.documentElement.dataset.hydrated = "true";
+  }, []);
   return <Outlet />;
 }
