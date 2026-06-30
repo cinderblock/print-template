@@ -65,7 +65,16 @@ react-router.config.ts — prerender ["/", each /template/:id, 404]
 - [x] Home gallery + template route + prerender config
 - [x] Verify: typecheck + build + 8 Playwright tests green
 - [x] Decide deploy target (GitHub Pages); wire workflow + subpath; verify under /print-template/
-- [ ] Create `cinderblock/print-template` repo + push; enable Pages (source = GitHub Actions)
+- [x] Create `cinderblock/print-template` (public) + push; enable Pages (workflow source)
+- [x] First deploy green; **live at https://cinderblock.github.io/print-template/** (home + template 200)
+
+## Live / next ideas
+
+- Site: https://cinderblock.github.io/print-template/ · Repo: https://github.com/cinderblock/print-template
+- Minor: CI warns `actions/checkout@v4` + `upload-artifact@v4` run on Node 24 (Node 20 deprecated) —
+  bump to newer action versions when convenient. Non-blocking.
+- Next templates: Avery label sheets (grid of cells; same TemplateRender pattern). Endorsement could
+  become a checkbox+text. Consider a print-margin/offset calibration aid.
 
 ## Findings / gotchas
 
