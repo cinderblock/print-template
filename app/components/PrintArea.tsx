@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { ReactNode } from "react";
 import type { PaperSize } from "~/templates/types";
 
@@ -6,9 +7,14 @@ const DPI = 96; // CSS pixels per inch
 
 /**
  * Shows its children on a true-to-size "paper" element and prints them at exact
- * physical dimensions. On screen the paper is scaled down to fit the available
- * width; on print, an injected `@page` rule sets the real media size and only
- * the paper is shown.
+ * physical dimensions.
+ *
+ * On screen the paper is scaled down to fit the available width. For printing,
+ * a separate true-size copy is rendered into a portal at `<body>` and an
+ * injected `@page` rule sets the real media size; in print, everything except
+ * that portal is `display: none` so only the one paper-sized page is emitted.
+ * (Using `visibility: hidden` instead would leave the app chrome occupying
+ * layout space and spill onto extra pages.)
  */
 export function PrintArea({
   paper,
@@ -19,8 +25,11 @@ export function PrintArea({
 }) {
   const stageRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
+  const [mounted, setMounted] = useState(false);
   const paperWidthPx = paper.width * DPI;
   const paperHeightPx = paper.height * DPI;
+
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     const stage = stageRef.current;
@@ -35,33 +44,59 @@ export function PrintArea({
     return () => ro.disconnect();
   }, [paperWidthPx]);
 
-  // Only the screen layout needs the computed height; print resets it.
-  const stageHeight = paperHeightPx * scale;
+  const printCss = `
+    @media screen { .print-portal { display: none; } }
+    @media print {
+      @page { size: ${paper.width}in ${paper.height}in; margin: 0; }
+      html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
+      body > *:not(.print-portal) { display: none !important; }
+      .print-portal { display: block !important; }
+      .print-portal .print-paper {
+        position: absolute; left: 0; top: 0;
+        box-shadow: none !important; border: 0 !important;
+      }
+    }
+  `;
 
   return (
-    <div className="print-stage" ref={stageRef} style={{ height: stageHeight }}>
-      <style media="print">{`
-        @page { size: ${paper.width}in ${paper.height}in; margin: 0; }
-        html, body { background: #fff !important; }
-        body * { visibility: hidden !important; }
-        .print-stage { position: static !important; overflow: visible !important; height: auto !important; }
-        .print-paper, .print-paper * { visibility: visible !important; }
-        .print-paper {
-          position: absolute !important; left: 0 !important; top: 0 !important;
-          transform: none !important; box-shadow: none !important; margin: 0 !important;
-        }
-      `}</style>
+    <>
+      <style>{printCss}</style>
+
+      {/* On-screen scaled preview */}
       <div
-        className="print-paper"
-        style={{
-          width: `${paper.width}in`,
-          height: `${paper.height}in`,
-          transform: `scale(${scale})`,
-          transformOrigin: "top left",
-        }}
+        className="print-stage"
+        ref={stageRef}
+        style={{ height: paperHeightPx * scale }}
       >
-        {children}
+        <div
+          className="print-paper"
+          style={{
+            width: `${paper.width}in`,
+            height: `${paper.height}in`,
+            transform: `scale(${scale})`,
+            transformOrigin: "top left",
+          }}
+        >
+          {children}
+        </div>
       </div>
-    </div>
+
+      {/* Print-only true-size copy, portaled to <body> for clean isolation */}
+      {mounted &&
+        createPortal(
+          <div className="print-portal">
+            <div
+              className="print-paper"
+              style={{
+                width: `${paper.width}in`,
+                height: `${paper.height}in`,
+              }}
+            >
+              {children}
+            </div>
+          </div>,
+          document.body,
+        )}
+    </>
   );
 }

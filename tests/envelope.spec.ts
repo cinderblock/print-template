@@ -16,8 +16,12 @@ test.describe("Envelope template", () => {
     await page.getByLabel("Return address (from)").fill("Jane Doe\n1 A St");
     await page.getByLabel("Delivery address (to)").fill("IRS\nPO Box 1");
 
-    await expect(page.locator(".envelope__return")).toContainText("Jane Doe");
-    await expect(page.locator(".envelope__delivery")).toContainText("IRS");
+    // Scope to the on-screen preview (a second copy exists in the print portal).
+    const preview = page.locator(".print-stage");
+    await expect(preview.locator(".envelope__return")).toContainText(
+      "Jane Doe",
+    );
+    await expect(preview.locator(".envelope__delivery")).toContainText("IRS");
   });
 
   test("persists the from address across reloads", async ({ page }) => {
@@ -47,5 +51,20 @@ test.describe("Envelope template", () => {
     await expect(
       page.getByRole("option", { name: "Book Entry" }),
     ).toBeAttached();
+  });
+
+  test("print view isolates a single paper-sized page", async ({ page }) => {
+    await gotoHydrated(page, "/template/envelope-10");
+    await page.getByLabel("Return address (from)").fill("Print Me\n9 Z St");
+
+    await page.emulateMedia({ media: "print" });
+
+    // App chrome is removed from layout; only the portaled paper prints.
+    await expect(page.locator("main")).toBeHidden();
+    const printPaper = page.locator(".print-portal .print-paper");
+    await expect(printPaper).toBeVisible();
+    await expect(printPaper.locator(".envelope__return")).toContainText(
+      "Print Me",
+    );
   });
 });
