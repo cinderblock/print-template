@@ -3,8 +3,10 @@ import { templateIds } from "./app/templates/manifest";
 
 export default {
   ssr: false,
-  // Enumerate explicit paths so each template page is prerendered to static
-  // HTML (the splat 404 route is served via the SPA fallback).
+  // Set only in the Pages CI build (project subpath, e.g. /print-template/);
+  // unset locally so dev/tests run at root. Prerendered pages are emitted under
+  // this prefix; the deploy workflow flattens them to the artifact root.
+  basename: process.env.BASE_PATH ?? "/",
   async prerender() {
     return ["/", ...templateIds.map((id) => `/template/${id}`)];
   },

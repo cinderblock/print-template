@@ -18,13 +18,14 @@ Repo to become **`cinderblock/print-template`**, hosted as a static site. Based 
 - Persistence: browser **localStorage** — a saved default **from** address, and an **address book**
   of recently-used **to** addresses (pick from recents; offer to save new ones).
 
-## Open decisions
+## Decisions (resolved)
 
-1. **Deploy target.** ssg-base ships a **Cloudflare Pages** GitHub Action (`.github/workflows/deploy.yml`).
-   User originally said **GitHub Pages**. These differ: GH Pages _project_ site serves under
-   `/print-template/` (needs Vite `base`) and a different workflow; Cloudflare Pages serves at root.
-   → CONFIRM with user before wiring deploy. App code is deploy-agnostic, so build first.
-2. Repo visibility (GH Pages free needs public; content is non-sensitive → public is fine).
+- **Deploy target: GitHub Pages** (project page at `/print-template/`). Replaced the Cloudflare
+  workflow with a Pages workflow. Subpath via `BASE_PATH` env (CI-only) → local dev/tests stay at root.
+  RR nests prerendered HTML under the basename dir; the workflow flattens it to the artifact root and
+  adds `404.html` (SPA fallback). Verified locally by serving under `/print-template/` (200s).
+- **Repo: public** (`cinderblock/print-template`) — GH Pages free needs public; content is non-sensitive.
+- **Push: approved by user.** Final `gh repo create` command to be shown for confirmation before running.
 
 ## Architecture
 
@@ -63,7 +64,8 @@ react-router.config.ts — prerender ["/", each /template/:id, 404]
 - [x] Envelope #10 template
 - [x] Home gallery + template route + prerender config
 - [x] Verify: typecheck + build + 8 Playwright tests green
-- [ ] Decide deploy target with user; wire workflow; (later) push to GitHub + enable Pages
+- [x] Decide deploy target (GitHub Pages); wire workflow + subpath; verify under /print-template/
+- [ ] Create `cinderblock/print-template` repo + push; enable Pages (source = GitHub Actions)
 
 ## Findings / gotchas
 

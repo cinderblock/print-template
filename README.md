@@ -48,7 +48,11 @@ bun run dev        # http://localhost:5173
 
 ## Deploy
 
-Static output lands in `build/client/` — host on any static host. The included GitHub Action
-(`.github/workflows/deploy.yml`, inherited from ssg-base) targets **Cloudflare Pages**; switch to
-GitHub Pages by swapping the workflow and setting Vite's `base` if served from a subpath.
-See `plans/print-template.md`.
+`.github/workflows/deploy.yml` builds and publishes to **GitHub Pages** on every push to `master`
+(format check → tests → typecheck → build). The site is a project page at
+`https://<owner>.github.io/print-template/`.
+
+The subpath is wired via a `BASE_PATH` env var that is set **only in CI**, so local dev and tests
+still run at root. React Router emits prerendered pages under the basename dir; the workflow
+flattens them to the artifact root and adds a `404.html` SPA fallback. To build the subpath layout
+locally: `BASE_PATH=/print-template/ bun run build`. See `plans/print-template.md`.

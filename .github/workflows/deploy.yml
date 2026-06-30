@@ -1,18 +1,21 @@
-name: Deploy to Cloudflare Pages
+name: Deploy to GitHub Pages
 
 on:
   push:
-    branches:
-      - master
-  pull_request:
+    branches: [master]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 concurrency:
-  group: ci-${{ github.ref }}
+  group: pages
   cancel-in-progress: true
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -38,13 +41,34 @@ jobs:
       - name: Type check
         run: bun run typecheck
 
-      - name: Build
+      - name: Build (project subpath)
         run: bun run build
+        env:
+          BASE_PATH: /print-template/
 
-      - name: Deploy to Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
+      # React Router emits prerendered pages under the basename dir; flatten them
+      # to the artifact root so the project page serves correctly at /print-template/.
+      - name: Assemble Pages artifact
+        run: |
+          rm -rf _site && mkdir _site
+          cp -r build/client/print-template/* _site/
+          cp -r build/client/assets _site/assets
+          cp build/client/index.html _site/404.html   # SPA fallback for unknown paths
+          cp build/client/*.svg _site/ 2>/dev/null || true
+          touch _site/.nojekyll
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-          # TODO: Update project name for your site
-          command: pages deploy build/client --project-name=my-site
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
