@@ -1,5 +1,6 @@
-/* #10 envelope layout. Positions are in inches so they print true-to-size;
-   the parent .print-paper provides the 9.5 x 4.125in canvas. */
+/* Envelope layout. Return address is a fixed offset from the top-left; the
+   delivery block and endorsement use percentages so they stay roughly centered
+   across envelope sizes. The parent .print-paper provides the inch-sized canvas. */
 .envelope {
   position: absolute;
   inset: 0;
@@ -18,17 +19,18 @@
 
 .envelope__endorsement {
   position: absolute;
-  top: 1.55in;
-  left: 4in;
+  top: 38%;
+  left: 42%;
   font-size: 10pt;
   font-weight: 700;
   letter-spacing: 0.5px;
+  white-space: pre-line;
 }
 
 .envelope__delivery {
   position: absolute;
-  top: 1.95in;
-  left: 4in;
+  top: 46%;
+  left: 42%;
   font-size: 13pt;
   line-height: 1.4;
   white-space: pre-line;

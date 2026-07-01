@@ -6,22 +6,21 @@ import type { PaperSize } from "~/templates/types";
 const DPI = 96; // CSS pixels per inch
 
 /**
- * Shows its children on a true-to-size "paper" element and prints them at exact
- * physical dimensions.
+ * Shows `preview` on a true-to-size "paper" on screen (scaled to fit), and
+ * prints `pages` — one paper-sized page each — at exact physical dimensions.
  *
- * On screen the paper is scaled down to fit the available width. For printing,
- * a separate true-size copy is rendered into a portal at `<body>` and an
- * injected `@page` rule sets the real media size; in print, everything except
- * that portal is `display: none` so only the one paper-sized page is emitted.
- * (Using `visibility: hidden` instead would leave the app chrome occupying
- * layout space and spill onto extra pages.)
+ * The print copies render into a portal at `<body>`; in print, everything
+ * except that portal is `display: none` (so the app chrome doesn't spill onto
+ * extra pages) and each page gets `break-after: page`.
  */
 export function PrintArea({
   paper,
-  children,
+  preview,
+  pages,
 }: {
   paper: PaperSize;
-  children: ReactNode;
+  preview: ReactNode;
+  pages: ReactNode[];
 }) {
   const stageRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
@@ -52,8 +51,11 @@ export function PrintArea({
       body > *:not(.print-portal) { display: none !important; }
       .print-portal { display: block !important; }
       .print-portal .print-paper {
-        position: absolute; left: 0; top: 0;
-        box-shadow: none !important; border: 0 !important;
+        box-shadow: none !important; border: 0 !important; margin: 0 !important;
+        break-after: page; page-break-after: always;
+      }
+      .print-portal .print-paper:last-child {
+        break-after: auto; page-break-after: auto;
       }
     }
   `;
@@ -77,23 +79,27 @@ export function PrintArea({
             transformOrigin: "top left",
           }}
         >
-          {children}
+          {preview}
         </div>
       </div>
 
-      {/* Print-only true-size copy, portaled to <body> for clean isolation */}
+      {/* Print-only true-size pages, portaled to <body> for clean isolation */}
       {mounted &&
         createPortal(
           <div className="print-portal">
-            <div
-              className="print-paper"
-              style={{
-                width: `${paper.width}in`,
-                height: `${paper.height}in`,
-              }}
-            >
-              {children}
-            </div>
+            {pages.map((page, i) => (
+              <div
+                // eslint-disable-next-line react/no-array-index-key
+                key={i}
+                className="print-paper"
+                style={{
+                  width: `${paper.width}in`,
+                  height: `${paper.height}in`,
+                }}
+              >
+                {page}
+              </div>
+            ))}
           </div>,
           document.body,
         )}

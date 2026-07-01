@@ -8,6 +8,6 @@ export default {
   // this prefix; the deploy workflow flattens them to the artifact root.
   basename: process.env.BASE_PATH ?? "/",
   async prerender() {
-    return ["/", ...templateIds.map((id) => `/template/${id}`)];
+    return ["/", "/addresses", ...templateIds.map((id) => `/template/${id}`)];
   },
 } satisfies Config;

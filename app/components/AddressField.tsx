@@ -1,22 +1,28 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import type { FieldDef } from "~/templates/types";
 import {
-  addToAddressBook,
-  loadAddressBook,
-  removeFromAddressBook,
-  saveFromAddress,
+  loadBook,
+  removeFromBook,
+  saveToBook,
+  touchBook,
   type BookEntry,
 } from "~/lib/storage";
 
-/** First line of an address, used to label saved entries in the picker. */
-function summarize(text: string): string {
-  const first = text.trim().split("\n")[0]?.trim() ?? "";
-  return first.length > 42 ? `${first.slice(0, 41)}…` : first || "(blank)";
+function firstLine(text: string): string {
+  const line = text.trim().split("\n")[0]?.trim() ?? "";
+  return line.length > 40 ? `${line.slice(0, 39)}…` : line || "(blank)";
+}
+
+function optionLabel(entry: BookEntry): string {
+  return entry.nickname
+    ? `${entry.nickname} — ${firstLine(entry.text)}`
+    : firstLine(entry.text);
 }
 
 /**
- * A multi-line address input. For a `from` field it persists as the user's
- * default return address; for a `to` field it offers a recent-address book.
+ * A multi-line address input backed by an address book (when `field.book` is
+ * set): pick a saved address, save the current one with an optional nickname,
+ * or forget it.
  */
 export function AddressField({
   field,
@@ -28,31 +34,28 @@ export function AddressField({
   onChange: (value: string) => void;
 }) {
   const [book, setBook] = useState<BookEntry[]>([]);
-  const [savedFlash, setSavedFlash] = useState(false);
-  const saveTimer = useRef<number | undefined>(undefined);
+  const [nickname, setNickname] = useState("");
+  const [flash, setFlash] = useState(false);
 
-  // Load the address book (client only).
   useEffect(() => {
-    if (field.addressBook) setBook(loadAddressBook());
-  }, [field.addressBook]);
+    if (field.book) setBook(loadBook(field.book));
+  }, [field.book]);
 
-  // Persist the default "from" address, debounced.
-  useEffect(() => {
-    if (!field.isDefaultFrom) return;
-    window.clearTimeout(saveTimer.current);
-    saveTimer.current = window.setTimeout(() => saveFromAddress(value), 400);
-    return () => window.clearTimeout(saveTimer.current);
-  }, [value, field.isDefaultFrom]);
+  const saved = field.book
+    ? book.find((e) => e.text.trim() === value.trim())
+    : undefined;
 
-  function handleSaveToBook() {
-    if (!value.trim()) return;
-    setBook(addToAddressBook(value, Date.now()));
-    setSavedFlash(true);
-    window.setTimeout(() => setSavedFlash(false), 1600);
+  function pick(text: string) {
+    onChange(text);
+    if (field.book) touchBook(field.book, text);
   }
 
-  function handleForget(text: string) {
-    setBook(removeFromAddressBook(text));
+  function save() {
+    if (!field.book || !value.trim()) return;
+    setBook(saveToBook(field.book, value, nickname));
+    setNickname("");
+    setFlash(true);
+    window.setTimeout(() => setFlash(false), 1600);
   }
 
   return (
@@ -61,23 +64,22 @@ export function AddressField({
         {field.label}
       </label>
 
-      {field.addressBook && book.length > 0 && (
-        <div className="field__recents">
-          <select
-            aria-label="Recent addresses"
-            value=""
-            onChange={(e) => {
-              if (e.target.value) onChange(e.target.value);
-            }}
-          >
-            <option value="">Recent addresses…</option>
-            {book.map((entry) => (
-              <option key={entry.text} value={entry.text}>
-                {summarize(entry.text)}
-              </option>
-            ))}
-          </select>
-        </div>
+      {field.book && book.length > 0 && (
+        <select
+          className="field__recents"
+          aria-label={`Saved ${field.book} addresses`}
+          value=""
+          onChange={(e) => {
+            if (e.target.value) pick(e.target.value);
+          }}
+        >
+          <option value="">Saved addresses…</option>
+          {book.map((entry) => (
+            <option key={entry.id} value={entry.text}>
+              {optionLabel(entry)}
+            </option>
+          ))}
+        </select>
       )}
 
       <textarea
@@ -89,35 +91,37 @@ export function AddressField({
         onChange={(e) => onChange(e.target.value)}
       />
 
-      <div className="field__row">
-        {field.isDefaultFrom && (
-          <span className="field__hint">
-            Saved as your default return address on this device.
-          </span>
-        )}
-        {field.addressBook && (
-          <>
+      {field.book && (
+        <div className="field__row">
+          <input
+            className="field__input field__nick"
+            type="text"
+            aria-label="Nickname"
+            placeholder="Nickname (optional)"
+            value={saved?.nickname ?? nickname}
+            onChange={(e) => setNickname(e.target.value)}
+          />
+          <button
+            type="button"
+            className="btn btn--ghost"
+            onClick={save}
+            disabled={!value.trim()}
+          >
+            {flash ? "Saved ✓" : saved ? "Update" : "Save"}
+          </button>
+          {saved && (
             <button
               type="button"
-              className="btn btn--ghost"
-              onClick={handleSaveToBook}
-              disabled={!value.trim()}
+              className="btn btn--ghost btn--danger"
+              onClick={() =>
+                field.book && setBook(removeFromBook(field.book, saved.id))
+              }
             >
-              {savedFlash ? "Saved ✓" : "Save to address book"}
+              Forget
             </button>
-            {book.some((e) => e.text.trim() === value.trim()) &&
-              value.trim() && (
-                <button
-                  type="button"
-                  className="btn btn--ghost btn--danger"
-                  onClick={() => handleForget(value)}
-                >
-                  Forget
-                </button>
-              )}
-          </>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       {field.help && <p className="field__hint">{field.help}</p>}
     </div>

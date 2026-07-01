@@ -1,12 +1,13 @@
 import type { TemplateRender } from "./types";
-import { envelope10 } from "./envelope-10";
+import { envelopeTemplates } from "./envelopes";
 
 /**
- * id → renderable template. Add new templates here (and to `manifest.ts`).
+ * id → renderable template. Add new templates by including them here (and their
+ * metadata in `manifest.ts`).
  */
-const templates: Record<string, TemplateRender> = {
-  [envelope10.id]: envelope10,
-};
+const templates: Record<string, TemplateRender> = Object.fromEntries(
+  envelopeTemplates.map((t) => [t.id, t]),
+);
 
 export function getTemplate(
   id: string | undefined,

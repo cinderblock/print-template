@@ -1,4 +1,5 @@
 import type { ComponentType } from "react";
+import type { BookKind } from "../lib/storage";
 
 /** Kinds of editable input a template can expose. */
 export type FieldType = "text" | "textarea" | "address";
@@ -11,16 +12,10 @@ export interface FieldDef {
   default?: string;
   placeholder?: string;
   help?: string;
-  /**
-   * For `address` fields: persist this value as the user's default "from"
-   * address in localStorage, and pre-fill it on load.
-   */
-  isDefaultFrom?: boolean;
-  /**
-   * For `address` fields: offer a "recently used" address book — pick from
-   * past entries and optionally save new ones.
-   */
-  addressBook?: boolean;
+  /** For `address` fields: back this field with the named address book. */
+  book?: BookKind;
+  /** Pre-fill this field with the most-recently-used entry from its book. */
+  prefillLatest?: boolean;
 }
 
 /** Current values for a template's fields, keyed by FieldDef.name. */
@@ -46,8 +41,7 @@ export interface TemplateMeta {
 
 /**
  * The renderable part of a template (paper size + fields + preview), keyed by
- * `id` to match a {@link TemplateMeta} in the manifest. Kept separate from the
- * metadata so the manifest stays React-free for routing/prerender.
+ * `id` to match a {@link TemplateMeta} in the manifest.
  */
 export interface TemplateRender {
   id: string;
@@ -55,4 +49,9 @@ export interface TemplateRender {
   fields: FieldDef[];
   /** Renders the printable content for the given field values. */
   Preview: ComponentType<{ values: FieldValues }>;
+  /**
+   * If set, this field can vary across a batch: the template page offers a
+   * "Batch" mode that prints one page per value of this field (e.g. "to").
+   */
+  batchField?: string;
 }

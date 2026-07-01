@@ -1,5 +1,6 @@
 import "./envelope.css";
 import type { FieldValues, TemplateRender } from "../types";
+import { envelopeSizes } from "./sizes";
 
 function EnvelopePreview({ values }: { values: FieldValues }) {
   const from = values.from ?? "";
@@ -16,22 +17,25 @@ function EnvelopePreview({ values }: { values: FieldValues }) {
   );
 }
 
-export const envelope10: TemplateRender = {
-  id: "envelope-10",
-  paper: { width: 9.5, height: 4.125, label: "#10 Envelope · 9.5 × 4.125 in" },
+/** All envelope templates share the same fields and preview; only paper differs. */
+export const envelopeTemplates: TemplateRender[] = envelopeSizes.map((s) => ({
+  id: s.id,
+  paper: s.paper,
+  batchField: "to",
   fields: [
     {
       name: "from",
       label: "Return address (from)",
       type: "address",
-      isDefaultFrom: true,
+      book: "from",
+      prefillLatest: true,
       placeholder: "Your Name\n123 Main St\nCity, ST 12345",
     },
     {
       name: "to",
       label: "Delivery address (to)",
       type: "address",
-      addressBook: true,
+      book: "to",
       placeholder: "Recipient Name\n456 Oak Ave\nCity, ST 67890",
     },
     {
@@ -43,4 +47,4 @@ export const envelope10: TemplateRender = {
     },
   ],
   Preview: EnvelopePreview,
-};
+}));

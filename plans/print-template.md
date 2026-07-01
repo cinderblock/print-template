@@ -68,6 +68,22 @@ react-router.config.ts — prerender ["/", each /template/:id, 404]
 - [x] Create `cinderblock/print-template` (public) + push; enable Pages (workflow source)
 - [x] First deploy green; **live at https://cinderblock.github.io/print-template/** (home + template 200)
 
+## Feature batch (in progress, approved 2026-06-30)
+
+- [ ] Storage v2: separate **from** + **to** address books, entries with **nicknames**, migration
+      from v1 keys, **import/export** JSON.
+- [ ] `AddressField`: book-backed (picker w/ nicknames, save w/ nickname, forget) for both from & to.
+- [ ] Prefill from field with latest send address; auto-remember used addresses on Print.
+- [ ] **Batch mode** on envelope (alternate view): shared from/endorsement + many to-addresses →
+      one page each. Generalized via `TemplateRender.batchField`.
+- [ ] `PrintArea` renders N pages (portal, `break-after: page`).
+- [ ] **Address book manager** page (`/addresses`): view/rename/delete + import/export.
+- [ ] **More envelope sizes** (#10, #9, 6×9, A7, A2, DL) via a React-free `sizes.ts` + factory;
+      percentage-based layout so positions adapt.
+- [ ] **Branding**: app favicon + titles/OG.
+- [ ] Housekeeping: bump `actions/checkout` to v5 (Node 20 deprecation).
+- Skipped by user: printer calibration; Avery (future); USPS uppercase.
+
 ## Live / next ideas
 
 - Site: https://cinderblock.github.io/print-template/ · Repo: https://github.com/cinderblock/print-template

@@ -1,5 +1,6 @@
 import type { MetaFunction } from "react-router";
 import { Link } from "react-router";
+import { EnvelopeMark } from "~/components/EnvelopeMark";
 import { templateList } from "~/templates/manifest";
 
 export const meta: MetaFunction = () => {
@@ -22,11 +23,17 @@ export default function Home() {
   return (
     <main className="container">
       <header className="site-header">
-        <h1 className="site-header__title">Print Template</h1>
+        <h1 className="site-header__title">
+          <EnvelopeMark className="site-header__mark" />
+          Print Template
+        </h1>
         <p className="intro">
           Print onto envelopes, labels, and more — straight from your browser.
           Your addresses are saved only on this device.
         </p>
+        <Link to="/addresses" className="cta cta--ghost">
+          Manage address book →
+        </Link>
       </header>
 
       {categories.map((category) => (
